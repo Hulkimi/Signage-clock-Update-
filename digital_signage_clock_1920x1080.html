@@ -1,0 +1,250 @@
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Digital Signage Flip Clock</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #279CF5;
+    color: #f8fafc;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  .screen {
+    width: 100vw;
+    height: 100vh;
+    min-width: 1920px;
+    min-height: 1080px;
+    position: relative;
+    background: #279CF5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .clock {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+  
+  .flip-unit {
+    display: flex;
+    gap: 8px;
+  }
+
+  /* --- LARGE TV FLIP CARD CONFIGURATION --- */
+  .flip-card {
+    position: relative;
+    width: 220px;
+    height: 380px;
+    font-size: 240px;
+    font-weight: 500;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background: #1e2229;
+    color: #f1f3f5;
+    border-radius: 16px;
+    box-shadow: 0 20px 45px rgba(0,0,0,0.3);
+    perspective: 600px;
+    user-select: none;
+  }
+
+  .upper, .lower, .fold-card {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+  }
+
+  .upper, .fold-card {
+    top: 0;
+    align-items: flex-end;
+    background: #161920;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    border-bottom: 2px solid rgba(0,0,0,0.5);
+  }
+
+  .lower {
+    bottom: 0;
+    align-items: flex-start;
+    background: #1e2229;
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
+  }
+
+  .upper span, .lower span, .fold-card span {
+    position: absolute;
+    height: 380px;
+    line-height: 380px;
+    width: 100%;
+    text-align: center;
+  }
+  .upper span { top: 0; }
+  .lower span { bottom: 0; }
+  .fold-card span { top: 0; }
+
+  .fold-card {
+    transform-origin: bottom;
+    transform-style: preserve-3d;
+    z-index: 10;
+    display: none;
+  }
+
+  .fold-card.fold {
+    display: flex;
+    animation: flipDown 0.4s ease-in-out forwards;
+  }
+
+  @keyframes flipDown {
+    0% {
+      transform: rotateX(0deg);
+    }
+    100% {
+      transform: rotateX(-180deg);
+    }
+  }
+
+  .separator {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 45px;
+    height: 380px;
+    padding: 0 10px;
+  }
+  .dot {
+    width: 20px;
+    height: 20px;
+    background-color: #1e2229;
+    border-radius: 50%;
+  }
+
+  .ampm {
+    font-size: 130px;
+    font-weight: 600;
+    letter-spacing: 6px;
+    color: #ffffff;
+    margin-left: 30px;
+    align-self: flex-end;
+    margin-bottom: 35px;
+  }
+
+  .date {
+    margin-top: 60px;
+    font-size: 42px;
+    font-weight: 400;
+    letter-spacing: 6px;
+    color: #ffffff;
+    text-transform: uppercase;
+    text-align: center;
+  }
+
+  @media (max-width: 1600px) {
+    .screen { min-width: 100vw; min-height: 100vh; }
+  }
+</style>
+</head>
+<body>
+<div class="screen">
+  <!-- FLIP CLOCK CONTAINER -->
+  <div class="clock" id="clock">
+    <!-- Hours -->
+    <div class="flip-unit">
+      <div class="flip-card" id="h1"><div class="upper"><span>0</span></div><div class="lower"><span>0</span></div><div class="fold-card"><span>0</span></div></div>
+      <div class="flip-card" id="h2"><div class="upper"><span>0</span></div><div class="lower"><span>0</span></div><div class="fold-card"><span>0</span></div></div>
+    </div>
+    
+    <div class="separator" id="sep1">
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+
+    <!-- Minutes -->
+    <div class="flip-unit">
+      <div class="flip-card" id="m1"><div class="upper"><span>0</span></div><div class="lower"><span>0</span></div><div class="fold-card"><span>0</span></div></div>
+      <div class="flip-card" id="m2"><div class="upper"><span>0</span></div><div class="lower"><span>0</span></div><div class="fold-card"><span>0</span></div></div>
+    </div>
+    
+    <!-- AM/PM -->
+    <div class="ampm" id="ampm">AM</div>
+  </div>
+  
+  <!-- Date -->
+  <div class="date" id="date"></div>
+</div>
+
+<script>
+  const dateEl = document.getElementById("date");
+  const ampmEl = document.getElementById("ampm");
+
+  function setDigit(cardId, newVal) {
+    const card = document.getElementById(cardId);
+    const upper = card.querySelector(".upper span");
+    const lower = card.querySelector(".lower span");
+    const folder = card.querySelector(".fold-card");
+    const folderSpan = folder.querySelector("span");
+
+    const currentVal = upper.textContent;
+    if (currentVal === newVal) return;
+
+    folderSpan.textContent = currentVal;
+    folder.style.display = "flex";
+    folder.classList.remove("fold");
+    void folder.offsetWidth; 
+    folder.classList.add("fold");
+
+    upper.textContent = newVal;
+
+    setTimeout(() => {
+      lower.textContent = newVal;
+      folder.style.display = "none";
+    }, 400);
+  }
+
+  function updateClock() {
+    const now = new Date();
+    let hours = now.getHours();
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+
+    // AM / PM
+    const ampm = hours >= 12 ? "PM" : "AM";
+
+    // Convert to 12-hour format
+    hours = hours % 12 || 12;
+    const hh = String(hours).padStart(2, "0");
+
+    // Hours
+    setDigit("h1", hh[0]);
+    setDigit("h2", hh[1]);
+
+    // Minutes
+    setDigit("m1", minutes[0]);
+    setDigit("m2", minutes[1]);
+
+    // AM / PM
+    ampmEl.textContent = ampm;
+
+    // DATE
+    dateEl.textContent = now.toLocaleDateString("en-MY", {
+      weekday: "long",
+      day: "2-digit",
+      month: "long",
+      year: "numeric"
+    });
+  }
+
+  // Initialize immediately and start interval loop
+  updateClock();
+  setInterval(updateClock, 1000);
+</script>
+</body>
+</html>
